@@ -43,7 +43,7 @@ export default function Home() {
 
   // Create Group Form State
   const [createForm, setCreateForm] = useState({
-    name: '', code: '', chairmanName: '', chairmanPhone: '', amount: '', cycle: 'Weekly', minMembers: ''
+    name: '', code: '', chairmanName: '', chairmanPhone: '', amount: '', cycle: '7', minMembers: ''
   });
   const [isCreating, setIsCreating] = useState(false);
   const [createSuccess, setCreateSuccess] = useState(false);
@@ -238,7 +238,7 @@ export default function Home() {
                 <div className="mt-6 grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-1">Contribution</p>
-                    <p className="font-black text-stone-900 text-lg">{activeGroup.amount} AVAX <span className="text-sm font-medium text-stone-500 block">{activeGroup.cycle}</span></p>
+                    <p className="font-black text-stone-900 text-lg">{activeGroup.amount} AVAX <span className="text-sm font-medium text-stone-500 block">{activeGroup.cycle} Days</span></p>
                   </div>
                   <div>
                     <p className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-1">Members</p>
@@ -373,10 +373,18 @@ export default function Home() {
                       </div>
                       <div className="space-y-2 col-span-3 sm:col-span-1">
                         <label className="text-sm font-bold text-stone-700">Cycle</label>
-                        <select value={createForm.cycle} onChange={e => setCreateForm({...createForm, cycle: e.target.value})} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all text-stone-900 font-medium appearance-none">
-                          <option value="Weekly">Weekly</option>
-                          <option value="Monthly">Monthly</option>
-                        </select>
+                        <div className="relative flex items-center w-full bg-stone-50 border border-stone-200 rounded-xl focus-within:ring-2 focus-within:ring-amber-500/50 focus-within:border-amber-500 transition-all overflow-hidden">
+                          <input 
+                            required 
+                            value={createForm.cycle} 
+                            onChange={e => setCreateForm({...createForm, cycle: e.target.value})} 
+                            type="number" 
+                            min="1" 
+                            className="w-full bg-transparent px-4 py-3 focus:outline-none text-stone-900 font-bold" 
+                            placeholder="7" 
+                          />
+                          <span className="pr-4 text-stone-500 font-medium pointer-events-none">Days</span>
+                        </div>
                       </div>
                       <div className="space-y-2 col-span-3 sm:col-span-1">
                         <label className="text-sm font-bold text-stone-700">Min Members</label>
