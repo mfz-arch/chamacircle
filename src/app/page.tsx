@@ -134,8 +134,9 @@ export default function Home() {
   };
 
   const handleCodeCheck = (code: string) => {
-    setJoinForm(prev => ({...prev, code}));
-    const group = groups.find(g => g.id === code);
+    const trimmedCode = code.trim();
+    setJoinForm(prev => ({...prev, code: trimmedCode}));
+    const group = groups.find(g => g.id === trimmedCode);
     setFoundGroup(group || null);
   };
 
@@ -405,7 +406,7 @@ export default function Home() {
                       </div>
                       <div className="space-y-2 col-span-2 sm:col-span-1">
                         <label className="text-sm font-bold text-stone-700">Group Code <span className="text-amber-600">*</span></label>
-                        <input required value={createForm.code} onChange={e => setCreateForm({...createForm, code: e.target.value.toUpperCase()})} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all text-stone-900 font-mono font-bold uppercase" placeholder="e.g. NAIROBI24" />
+                        <input required value={createForm.code} onChange={e => setCreateForm({...createForm, code: e.target.value.toUpperCase().trim()})} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all text-stone-900 font-mono font-bold uppercase" placeholder="e.g. NAIROBI24" />
                       </div>
                     </div>
 
