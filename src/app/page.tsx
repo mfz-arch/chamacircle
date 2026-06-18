@@ -4,6 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { Wallet, Users, ArrowRightLeft, ShieldCheck, History, Activity } from 'lucide-react';
 import { ethers } from 'ethers';
 
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
 export default function Home() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -21,8 +27,8 @@ export default function Home() {
   const connectWallet = async () => {
     setIsConnecting(true);
     try {
-      if (typeof window.ethereum !== 'undefined') {
-        const provider = new ethers.BrowserProvider(window.ethereum as any);
+      if (typeof (window as any).ethereum !== 'undefined') {
+        const provider = new ethers.BrowserProvider((window as any).ethereum);
         const signer = await provider.getSigner();
         const address = await signer.getAddress();
         setWalletAddress(address);
