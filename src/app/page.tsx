@@ -196,10 +196,45 @@ export default function Home() {
     }
   };
 
-  const handleCodeCheck = (code: string) => {
+  const handleCodeCheck = async (code: string) => {
     const trimmedCode = code.trim();
     setJoinForm(prev => ({...prev, code: trimmedCode}));
-    const group = groups.find(g => g.id === trimmedCode);
+    
+    // First check local state
+    let group = groups.find(g => g.id === trimmedCode);
+    
+    // If not found locally, fetch from Avalanche Blockchain!
+    if (!group && !CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS") && typeof window !== 'undefined') {
+      try {
+        const provider = new ethers.BrowserProvider((window as any).ethereum);
+        const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, provider);
+        const g = await contract.groups(trimmedCode);
+        
+        // If the admin address is not the zero address, the group exists on-chain!
+        if (g.admin !== ethers.ZeroAddress) {
+          group = {
+            id: trimmedCode,
+            name: g.name,
+            chairmanName: "Chairman", // We didn't store name in groups struct, so we use a placeholder
+            chairmanPhone: "",
+            amount: Number(ethers.formatEther(g.contributionAmount)),
+            cycle: Number(g.cycle),
+            minMembers: Number(g.minMembers),
+            admin: g.admin,
+            isActive: g.isActive,
+            totalFunds: Number(ethers.formatEther(g.totalFunds)),
+            members: [], // Members array would need to be fetched separately in a full indexer
+            requests: [] 
+          };
+          
+          // Add it to local state so the UI can use it
+          setGroups(prev => [...prev, group as Group]);
+        }
+      } catch (e) {
+        console.error("Failed to fetch group from blockchain:", e);
+      }
+    }
+    
     setFoundGroup(group || null);
   };
 
