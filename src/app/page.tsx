@@ -116,7 +116,13 @@ export default function Home() {
         await new Promise(r => setTimeout(r, 1500)); // Simulate delay
       } else {
         const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, signer);
-        const tx = await contract.createGroup(createForm.name);
+        const amountWei = ethers.parseEther(createForm.amount);
+        const tx = await contract.createGroup(
+          createForm.code, 
+          createForm.name, 
+          Number(createForm.minMembers), 
+          amountWei
+        );
         await tx.wait(); 
       }
       
@@ -173,7 +179,15 @@ export default function Home() {
     setIsJoining(true);
     
     try {
-      // Create Join Request instead of directly joining
+      if (!CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
+        const provider = new ethers.BrowserProvider((window as any).ethereum);
+        const signer = await provider.getSigner();
+        const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, signer);
+        const tx = await contract.requestJoin(foundGroup.id, joinForm.name, joinForm.phone);
+        await tx.wait();
+      }
+
+      // Create Join Request off-chain state
       const newRequest: JoinRequest = {
         id: Math.random().toString(36).substr(2, 9),
         groupCode: foundGroup.id,
@@ -213,10 +227,22 @@ export default function Home() {
     if (!activeGroup) return;
 
     if (isApproved) {
-      // NOTE: In a full on-chain app, the user would need to contribute AVAX here.
-      // We simulate moving them to members array.
       const req = activeGroup.requests.find(r => r.id === reqId);
       if (!req) return;
+
+      try {
+        if (!CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
+          const provider = new ethers.BrowserProvider((window as any).ethereum);
+          const signer = await provider.getSigner();
+          const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, signer);
+          const tx = await contract.approveMember(activeGroup.id, req.userWallet);
+          await tx.wait();
+        }
+      } catch (error: any) {
+        console.error("Blockchain approval failed:", error);
+        showToast("Blockchain approval failed", "error");
+        return;
+      }
 
       const newMember: Member = {
         name: req.name,
@@ -254,6 +280,28 @@ export default function Home() {
   const handleStartCycle = () => {
     showToast("Cycle Started Successfully!");
     // Logic for smart contract cycle start would go here
+  };
+
+  const handleContribute = async () => {
+    if (!activeGroup || !walletAddress) return;
+    try {
+      if (!CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
+        const provider = new ethers.BrowserProvider((window as any).ethereum);
+        const signer = await provider.getSigner();
+        const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, signer);
+        const tx = await contract.contribute(activeGroup.id, {
+          value: ethers.parseEther(activeGroup.amount.toString())
+        });
+        await tx.wait();
+        showToast("Contribution successful on-chain!");
+      } else {
+        await new Promise(r => setTimeout(r, 1500));
+        showToast("Mock contribution successful!");
+      }
+    } catch (e: any) {
+      console.error("Contribution failed:", e);
+      showToast(e?.message || "Contribution failed", "error");
+    }
   };
 
   const activeGroup = groups.find(g => g.id === activeGroupCode);
@@ -338,7 +386,14 @@ export default function Home() {
               </p>
 
               <div className="flex flex-wrap gap-4 pt-4">
-                {currentUserRole !== 'chairman' && (
+                {currentUserRole === 'member' && activeGroup?.members.some(m => m.walletAddress === walletAddress) ? (
+                  <button 
+                    onClick={handleContribute}
+                    className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-lg shadow-green-600/25 hover:shadow-xl hover:-translate-y-1"
+                  >
+                    Pay Contribution ({activeGroup.amount} AVAX)
+                  </button>
+                ) : currentUserRole !== 'chairman' && (
                   <button 
                     onClick={() => setIsJoinModalOpen(true)}
                     className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 shadow-lg shadow-amber-600/25 hover:shadow-xl hover:-translate-y-1"
