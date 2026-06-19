@@ -375,15 +375,15 @@ export default function Home() {
             </div>
             
             {/* Global Nav Links */}
-          <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center gap-6 font-bold text-sm">
-            <button onClick={() => setCurrentView('home')} className={`${currentView === 'home' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>Home</button>
-            {currentUserRole === 'chairman' && (
-              <button onClick={() => setCurrentView('dashboard')} className={`${currentView === 'dashboard' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>Dashboard</button>
-            )}
-            {currentUserRole === 'member' && activeGroupCode && (
-              <button onClick={() => setCurrentView('pending')} className={`${currentView === 'pending' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>My Status</button>
-            )}
+            <div className="hidden md:flex items-center gap-6 font-bold text-sm border-l border-stone-200 pl-6">
+              <button onClick={() => setCurrentView('home')} className={`${currentView === 'home' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>Home</button>
+              {currentUserRole === 'chairman' && (
+                <button onClick={() => setCurrentView('dashboard')} className={`${currentView === 'dashboard' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>Dashboard</button>
+              )}
+              {currentUserRole === 'member' && activeGroupCode && (
+                <button onClick={() => setCurrentView('pending')} className={`${currentView === 'pending' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>My Status</button>
+              )}
+            </div>
           </div>
           
           {walletAddress ? (
