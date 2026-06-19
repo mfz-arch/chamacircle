@@ -52,29 +52,19 @@ export default function Home() {
 
   // App & Global State
   const [groups, setGroups] = useState<Group[]>([]);
-  
-  // Load groups from local storage on mount
-  useEffect(() => {
-    const savedGroups = localStorage.getItem('chainchama_groups');
-    if (savedGroups) {
-      try {
-        setGroups(JSON.parse(savedGroups));
-      } catch (e) {
-        console.error("Failed to parse groups from localStorage", e);
-      }
-    }
-  }, []);
-
-  // Save groups to local storage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('chainchama_groups', JSON.stringify(groups));
-  }, [groups]);
-
   const [activeGroupCode, setActiveGroupCode] = useState<string | null>(null);
   
   // Navigation & Roles
-  const [currentUserRole, setCurrentUserRole] = useState<Role>('guest');
+  const [currentUserRole, setCurrentUserRole] = useState<Role>(null);
   const [currentView, setCurrentView] = useState<ViewState>('home');
+  
+  // UI State
+  const [toast, setToast] = useState<{message: string, type: 'success'|'error'} | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+
+  // Create Group Form
+  const [createForm, setCreateForm] = useState({
     name: '', code: '', chairmanName: '', chairmanPhone: '', amount: '', cycle: '7', minMembers: '', maxMembers: '5'
   });
   const [isCreating, setIsCreating] = useState(false);
