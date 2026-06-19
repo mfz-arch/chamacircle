@@ -1,4 +1,4 @@
-export const CHAINCHAMA_ADDRESS = "0x...YOUR_CONTRACT_ADDRESS_HERE...";
+export const CHAINCHAMA_ADDRESS = "0x90667a22Edd947B98c1B2341543bE5Ae38e439aa";
 
 export const CHAINCHAMA_ABI = [
   {
@@ -24,8 +24,12 @@ export const CHAINCHAMA_ABI = [
     "inputs": [
       { "internalType": "string", "name": "_code", "type": "string" },
       { "internalType": "string", "name": "_name", "type": "string" },
+      { "internalType": "string", "name": "_chairmanName", "type": "string" },
+      { "internalType": "string", "name": "_chairmanPhone", "type": "string" },
       { "internalType": "uint256", "name": "_minMembers", "type": "uint256" },
-      { "internalType": "uint256", "name": "_contributionAmount", "type": "uint256" }
+      { "internalType": "uint256", "name": "_maxMembers", "type": "uint256" },
+      { "internalType": "uint256", "name": "_contributionAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "_cycle", "type": "uint256" }
     ],
     "name": "createGroup",
     "outputs": [],
@@ -53,7 +57,9 @@ export const CHAINCHAMA_ABI = [
       { "internalType": "address", "name": "admin", "type": "address" },
       { "internalType": "uint256", "name": "totalFunds", "type": "uint256" },
       { "internalType": "uint256", "name": "minMembers", "type": "uint256" },
+      { "internalType": "uint256", "name": "maxMembers", "type": "uint256" },
       { "internalType": "uint256", "name": "contributionAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "cycle", "type": "uint256" },
       { "internalType": "bool", "name": "isActive", "type": "bool" },
       { "internalType": "uint256", "name": "memberCount", "type": "uint256" }
     ],

@@ -14,7 +14,9 @@ contract ChainChama {
         address admin;
         uint totalFunds;
         uint minMembers;
+        uint maxMembers;
         uint contributionAmount;
+        uint cycle; // cycle in days
         bool isActive;
         uint memberCount;
     }
@@ -29,25 +31,32 @@ contract ChainChama {
     function createGroup(
         string memory _code, 
         string memory _name, 
+        string memory _chairmanName,
+        string memory _chairmanPhone,
         uint _minMembers, 
-        uint _contributionAmount
+        uint _maxMembers,
+        uint _contributionAmount,
+        uint _cycle
     ) public {
         require(groups[_code].admin == address(0), "Group code already exists");
+        require(_maxMembers >= _minMembers, "Max members must be >= min members");
         
         groups[_code] = Group({
             name: _name,
             admin: msg.sender,
             totalFunds: 0,
             minMembers: _minMembers,
+            maxMembers: _maxMembers,
             contributionAmount: _contributionAmount,
+            cycle: _cycle,
             isActive: false,
             memberCount: 1
         });
 
         // Admin is automatically approved and added, but hasn't contributed yet
         members[_code][msg.sender] = MemberData({
-            name: "Chairman",
-            phone: "",
+            name: _chairmanName,
+            phone: _chairmanPhone,
             isApproved: true,
             hasContributed: false
         });
@@ -56,6 +65,7 @@ contract ChainChama {
     function requestJoin(string memory _code, string memory _name, string memory _phone) public {
         require(groups[_code].admin != address(0), "Group does not exist");
         require(!members[_code][msg.sender].isApproved, "Already a member");
+        require(groups[_code].memberCount < groups[_code].maxMembers, "Group is full");
         
         pendingRequests[_code][msg.sender] = true;
         members[_code][msg.sender] = MemberData({
@@ -69,6 +79,7 @@ contract ChainChama {
     function approveMember(string memory _code, address _member) public {
         require(msg.sender == groups[_code].admin, "Only Chairman can approve");
         require(pendingRequests[_code][_member], "No pending request");
+        require(groups[_code].memberCount < groups[_code].maxMembers, "Group is full");
         
         pendingRequests[_code][_member] = false;
         members[_code][_member].isApproved = true;

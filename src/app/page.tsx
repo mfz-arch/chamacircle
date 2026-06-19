@@ -151,8 +151,12 @@ export default function Home() {
         const tx = await contract.createGroup(
           createForm.code, 
           createForm.name, 
+          createForm.chairmanName,
+          createForm.chairmanPhone,
           Number(createForm.minMembers), 
-          amountWei
+          20, // default maxMembers to 20
+          amountWei,
+          Number(createForm.cycle)
         );
         await tx.wait(); 
       }
