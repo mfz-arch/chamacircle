@@ -215,15 +215,15 @@ export default function Home() {
           group = {
             id: trimmedCode,
             name: g.name,
-            chairmanName: "Chairman", // We didn't store name in groups struct, so we use a placeholder
+            chairmanName: "Chairman", // Placeholder
             chairmanPhone: "",
+            chairmanWallet: g.admin, // Mapped from g.admin
             amount: Number(ethers.formatEther(g.contributionAmount)),
-            cycle: Number(g.cycle),
+            cycle: g.cycle.toString(), // Convert BigInt/Number to string as required by interface
             minMembers: Number(g.minMembers),
-            admin: g.admin,
-            isActive: g.isActive,
-            totalFunds: Number(ethers.formatEther(g.totalFunds)),
-            members: [], // Members array would need to be fetched separately in a full indexer
+            maxMembers: Number(g.maxMembers),
+            status: g.isActive ? 'ACTIVE' : 'PENDING', // Map bool to literal type
+            members: [],
             requests: [] 
           };
           
