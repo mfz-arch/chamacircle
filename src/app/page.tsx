@@ -75,6 +75,14 @@ export default function Home() {
   const [isJoining, setIsJoining] = useState(false);
   const [foundGroup, setFoundGroup] = useState<Group | null>(null);
 
+  const disconnectWallet = () => {
+    setWalletAddress(null);
+    setCurrentView('home');
+    setCurrentUserRole('none');
+    setActiveGroupCode(null);
+    showToast("Wallet disconnected");
+  };
+
   // Handle wallet account changes
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).ethereum) {
@@ -82,10 +90,11 @@ export default function Home() {
         if (accounts.length > 0) {
           setWalletAddress(accounts[0]);
           setCurrentView('home'); // Send them back to home page on account switch
+          setCurrentUserRole('none');
+          setActiveGroupCode(null);
           showToast(`Wallet switched to ${accounts[0].substring(0,6)}...`, "success");
         } else {
-          setWalletAddress(null);
-          setCurrentView('home');
+          disconnectWallet();
         }
       };
       (window as any).ethereum.on('accountsChanged', handleAccountsChanged);
@@ -366,22 +375,40 @@ export default function Home() {
             </div>
             
             {/* Global Nav Links */}
-            <div className="hidden md:flex gap-4 border-l border-stone-200 pl-6">
-              <button onClick={() => setCurrentView('home')} className={`font-bold transition-colors ${currentView === 'home' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'}`}>Home</button>
-              {currentUserRole === 'chairman' && (
-                <button onClick={() => setCurrentView('dashboard')} className={`font-bold transition-colors ${currentView === 'dashboard' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'}`}>Dashboard</button>
-              )}
-            </div>
+          <div className="flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-6 font-bold text-sm">
+            <button onClick={() => setCurrentView('home')} className={`${currentView === 'home' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>Home</button>
+            {currentUserRole === 'chairman' && (
+              <button onClick={() => setCurrentView('dashboard')} className={`${currentView === 'dashboard' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>Dashboard</button>
+            )}
+            {currentUserRole === 'member' && activeGroupCode && (
+              <button onClick={() => setCurrentView('pending')} className={`${currentView === 'pending' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>My Status</button>
+            )}
           </div>
           
-          <button 
-            onClick={connectWallet}
-            disabled={isConnecting}
-            className="flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-6 py-2.5 rounded-full font-medium transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-70"
-          >
-            <Wallet size={18} />
-            {walletAddress ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}` : (isConnecting ? 'Connecting...' : 'Connect Wallet')}
-          </button>
+          {walletAddress ? (
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-2 bg-stone-100 text-stone-800 px-5 py-2.5 rounded-full font-medium text-sm">
+                <Wallet size={16} />
+                <span className="hidden sm:inline">{`${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`}</span>
+              </span>
+              <button 
+                onClick={disconnectWallet}
+                className="bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-full font-bold text-sm transition-colors shadow-sm"
+              >
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={connectWallet}
+              disabled={isConnecting}
+              className="flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-6 py-2.5 rounded-full font-medium transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-70"
+            >
+              <Wallet size={18} />
+              {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+            </button>
+          )}
         </div>
       </nav>
 
