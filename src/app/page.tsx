@@ -377,11 +377,39 @@ export default function Home() {
             {/* Global Nav Links */}
             <div className="hidden md:flex items-center gap-6 font-bold text-sm border-l border-stone-200 pl-6">
               <button onClick={() => setCurrentView('home')} className={`${currentView === 'home' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>Home</button>
-              {currentUserRole === 'chairman' && (
-                <button onClick={() => setCurrentView('dashboard')} className={`${currentView === 'dashboard' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>Dashboard</button>
+              
+              {/* Auto-detect Chairman login */}
+              {groups.some(g => g.admin.toLowerCase() === walletAddress?.toLowerCase()) && (
+                <button 
+                  onClick={() => {
+                    const g = groups.find(g => g.admin.toLowerCase() === walletAddress?.toLowerCase());
+                    if (g) {
+                      setActiveGroupCode(g.id);
+                      setCurrentUserRole('chairman');
+                      setCurrentView('dashboard');
+                    }
+                  }} 
+                  className={`${currentView === 'dashboard' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}
+                >
+                  My Dashboard
+                </button>
               )}
-              {currentUserRole === 'member' && activeGroupCode && (
-                <button onClick={() => setCurrentView('pending')} className={`${currentView === 'pending' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}>My Status</button>
+
+              {/* Auto-detect Member login */}
+              {groups.some(g => g.members.some(m => m.walletAddress.toLowerCase() === walletAddress?.toLowerCase()) || g.requests.some(r => r.userWallet.toLowerCase() === walletAddress?.toLowerCase())) && (
+                <button 
+                  onClick={() => {
+                    const g = groups.find(g => g.members.some(m => m.walletAddress.toLowerCase() === walletAddress?.toLowerCase()) || g.requests.some(r => r.userWallet.toLowerCase() === walletAddress?.toLowerCase()));
+                    if (g) {
+                      setActiveGroupCode(g.id);
+                      setCurrentUserRole('member');
+                      setCurrentView('pending');
+                    }
+                  }} 
+                  className={`${currentView === 'pending' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}
+                >
+                  My Status
+                </button>
               )}
             </div>
           </div>
