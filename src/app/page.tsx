@@ -52,6 +52,7 @@ export default function Home() {
 
   // App & Global State
   const [groups, setGroups] = useState<Group[]>([]);
+  const [recentPayouts, setRecentPayouts] = useState<any[]>([]);
   const [activeGroupCode, setActiveGroupCode] = useState<string | null>(null);
   
   // Navigation & Roles
@@ -360,6 +361,14 @@ export default function Home() {
         
         showToast("AVAX successfully transferred to the next member!", "success");
         
+        // Log the recent transaction
+        setRecentPayouts(prev => [{
+          time: new Date().toLocaleTimeString(),
+          amount: activeGroup.amount * activeGroup.members.length,
+          type: 'Cycle Payout Executed',
+          txHash: tx.hash
+        }, ...prev]);
+
         // Optimistically update local UI state to show empty funds
         setGroups(prev => prev.map(g => {
           if (g.id === activeGroup.id) {
@@ -559,7 +568,7 @@ export default function Home() {
                 <div className="text-center">
                   <p className="text-sm font-bold text-stone-400 uppercase tracking-widest mb-1">Current Pot</p>
                   <p className="text-4xl font-black text-stone-900">
-                    {activeGroup ? activeGroup.amount * activeGroup.members.length : 500} <span className="text-2xl">AVAX</span>
+                    {activeGroup ? Number(activeGroup.amount * activeGroup.members.length).toFixed(2).replace(/\.00$/, '') : 500} <span className="text-2xl">AVAX</span>
                   </p>
                 </div>
 
@@ -579,12 +588,23 @@ export default function Home() {
                       className="absolute transition-all duration-700"
                       style={{ transform: `translate(${x}px, ${y}px)` }}
                     >
-                      <div className={`relative group flex flex-col items-center`}>
-                        <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-xl transition-transform hover:scale-110 cursor-pointer
-                          ${isNext ? 'bg-amber-500 ring-4 ring-amber-500/30' : 
+                      <div className="relative group flex flex-col items-center">
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-xl transition-all hover:scale-110 cursor-pointer relative z-10
+                          ${isNext ? 'bg-amber-500 ring-4 ring-amber-500/50' : 
                             isReceived ? 'bg-stone-300' : 'bg-stone-800'}
                         `}>
-                          {member.name.charAt(0)}
+                          {isNext && (
+                            <span className="absolute inset-0 rounded-full bg-amber-500 animate-ping opacity-75"></span>
+                          )}
+                          <span className="relative z-10">{member.name.charAt(0).toUpperCase()}</span>
+                        </div>
+                        {/* Interactive Tooltip */}
+                        <div className="absolute top-20 opacity-0 group-hover:opacity-100 transition-opacity bg-stone-900 text-white text-sm py-2 px-4 rounded-xl whitespace-nowrap z-50 pointer-events-none shadow-xl transform group-hover:-translate-y-1 duration-200 text-center border border-stone-800">
+                          <p className="font-bold text-base">{member.name}</p>
+                          <p className="text-stone-400 text-xs font-mono my-1 bg-stone-800 py-1 px-2 rounded-md">{member.walletAddress.substring(0, 6)}...{member.walletAddress.substring(member.walletAddress.length - 4)}</p>
+                          <p className={`text-xs mt-1 font-bold uppercase tracking-widest ${isNext ? 'text-amber-400' : isReceived ? 'text-stone-300' : 'text-stone-500'}`}>
+                            {isNext ? '★ Next Payout' : isReceived ? '✓ Paid' : 'Member'}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -778,6 +798,60 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Recent Activity & Payouts */}
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-200">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
+                      <h3 className="text-xl font-black text-stone-900">Recent Activity</h3>
+                    </div>
+                    <a 
+                      href={`https://testnet.snowtrace.io/address/${CHAINCHAMA_ADDRESS}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-bold bg-stone-100 hover:bg-stone-200 text-stone-600 py-1.5 px-3 rounded-full transition-colors flex items-center gap-1"
+                    >
+                      Verify on Snowtrace <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </a>
+                  </div>
+                  
+                  {recentPayouts.length === 0 ? (
+                    <div className="text-center py-6 bg-stone-50 rounded-xl border border-stone-100 border-dashed">
+                      <p className="text-stone-500 font-medium text-sm">No recent payouts yet.</p>
+                      <p className="text-stone-400 text-xs mt-1">Start a cycle to see blockchain activity here.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentPayouts.map((payout, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-4 bg-stone-50 border border-stone-100 rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            </div>
+                            <div>
+                              <p className="font-bold text-stone-900">{payout.type}</p>
+                              <p className="text-stone-500 text-xs">{payout.time}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-black text-green-600">+{payout.amount} AVAX</p>
+                            <a 
+                              href={`https://testnet.snowtrace.io/tx/${payout.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-stone-400 hover:text-amber-600 text-xs font-medium underline transition-colors"
+                            >
+                              View tx
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
               </div>
