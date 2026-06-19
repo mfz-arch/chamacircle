@@ -44,7 +44,7 @@ interface Group {
 }
 
 type Role = 'chairman' | 'member' | null;
-type ViewState = 'home' | 'dashboard' | 'pending';
+type ViewState = 'home' | 'dashboard' | 'pending' | 'member_dashboard';
 
 export default function Home() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -396,17 +396,18 @@ export default function Home() {
               )}
 
               {/* Auto-detect Member login */}
-              {walletAddress && groups.some(g => g.members.some(m => m.walletAddress.toLowerCase() === (walletAddress || '').toLowerCase()) || g.requests.some(r => r.userWallet.toLowerCase() === (walletAddress || '').toLowerCase())) && (
+              {walletAddress && groups.some(g => g.chairmanWallet.toLowerCase() !== (walletAddress || '').toLowerCase() && (g.members.some(m => m.walletAddress.toLowerCase() === (walletAddress || '').toLowerCase()) || g.requests.some(r => r.userWallet.toLowerCase() === (walletAddress || '').toLowerCase()))) && (
                 <button 
                   onClick={() => {
-                    const g = groups.find(g => g.members.some(m => m.walletAddress.toLowerCase() === (walletAddress || '').toLowerCase()) || g.requests.some(r => r.userWallet.toLowerCase() === (walletAddress || '').toLowerCase()));
+                    const g = groups.find(g => g.chairmanWallet.toLowerCase() !== (walletAddress || '').toLowerCase() && (g.members.some(m => m.walletAddress.toLowerCase() === (walletAddress || '').toLowerCase()) || g.requests.some(r => r.userWallet.toLowerCase() === (walletAddress || '').toLowerCase())));
                     if (g) {
                       setActiveGroupCode(g.id);
                       setCurrentUserRole('member');
-                      setCurrentView('pending');
+                      const isApproved = g.members.some(m => m.walletAddress.toLowerCase() === (walletAddress || '').toLowerCase());
+                      setCurrentView(isApproved ? 'member_dashboard' : 'pending');
                     }
                   }} 
-                  className={`${currentView === 'pending' ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}
+                  className={`${(currentView === 'pending' || currentView === 'member_dashboard') ? 'text-amber-600' : 'text-stone-400 hover:text-stone-900'} transition-colors`}
                 >
                   My Status
                 </button>
@@ -634,6 +635,81 @@ export default function Home() {
                         </div>
                         <div>
                           <p className="font-bold text-stone-900">{m.name} {idx === 0 && <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full ml-1">Admin</span>}</p>
+                          <p className="text-stone-500 text-xs font-mono">{m.walletAddress.substring(0, 6)}...{m.walletAddress.substring(m.walletAddress.length - 4)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VIEW: MEMBER DASHBOARD */}
+        {currentView === 'member_dashboard' && activeGroup && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+            <div className="flex items-center justify-between">
+              <h1 className="text-4xl font-black text-stone-900">Member Dashboard</h1>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              
+              {/* Stats Card */}
+              <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-200 col-span-3 md:col-span-1 h-fit">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h3 className="text-xl font-black text-stone-900">{activeGroup.name}</h3>
+                    <p className="text-stone-500 font-medium">Status: <span className={`font-bold ${activeGroup.status === 'ACTIVE' ? 'text-green-600' : 'text-amber-600'}`}>{activeGroup.status}</span></p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="bg-stone-50 p-4 rounded-xl border border-stone-100">
+                    <p className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-1">Members</p>
+                    <p className="font-black text-stone-900 text-2xl">{activeGroup.members.length} <span className="text-base font-medium text-stone-500">/ {activeGroup.minMembers} (Min)</span></p>
+                  </div>
+                  <div className="bg-stone-50 p-4 rounded-xl border border-stone-100">
+                    <p className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-1">Contribution</p>
+                    <p className="font-black text-stone-900 text-2xl">{activeGroup.amount} AVAX <span className="text-base font-medium text-stone-500 block">Every {activeGroup.cycle} Days</span></p>
+                  </div>
+                </div>
+
+                <button 
+                  disabled={activeGroup.status !== 'ACTIVE'}
+                  className="w-full mt-6 bg-amber-600 hover:bg-amber-700 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg shadow-amber-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => showToast("This will open MetaMask to pay the contribution!", "success")}
+                >
+                  Pay Contribution
+                </button>
+                {activeGroup.status !== 'ACTIVE' && (
+                  <p className="text-center text-stone-500 text-sm mt-2 font-medium">Group is pending. Waiting for members.</p>
+                )}
+              </div>
+
+              {/* Members Area */}
+              <div className="col-span-3 md:col-span-2 space-y-6">
+                
+                {/* Active Members */}
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-200">
+                  <div className="flex items-center gap-2 mb-6">
+                    <Users className="text-amber-600" size={24} />
+                    <h3 className="text-xl font-black text-stone-900">Active Members</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {activeGroup.members.map((m, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 bg-stone-50 border border-stone-100 rounded-xl">
+                        <div className="w-10 h-10 bg-stone-800 rounded-full flex items-center justify-center text-white font-bold">
+                          {m.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-stone-900">
+                            {m.name} 
+                            {m.walletAddress.toLowerCase() === activeGroup.chairmanWallet.toLowerCase() && <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full ml-1">Admin</span>}
+                            {m.walletAddress.toLowerCase() === walletAddress?.toLowerCase() && <span className="text-xs bg-stone-200 text-stone-800 px-2 py-0.5 rounded-full ml-1">You</span>}
+                          </p>
                           <p className="text-stone-500 text-xs font-mono">{m.walletAddress.substring(0, 6)}...{m.walletAddress.substring(m.walletAddress.length - 4)}</p>
                         </div>
                       </div>
