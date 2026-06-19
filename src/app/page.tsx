@@ -75,6 +75,26 @@ export default function Home() {
   const [isJoining, setIsJoining] = useState(false);
   const [foundGroup, setFoundGroup] = useState<Group | null>(null);
 
+  // Handle wallet account changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      const handleAccountsChanged = (accounts: string[]) => {
+        if (accounts.length > 0) {
+          setWalletAddress(accounts[0]);
+          showToast(`Wallet switched to ${accounts[0].substring(0,6)}...`, "success");
+        } else {
+          setWalletAddress(null);
+        }
+      };
+      (window as any).ethereum.on('accountsChanged', handleAccountsChanged);
+      return () => {
+        if ((window as any).ethereum.removeListener) {
+          (window as any).ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        }
+      }
+    }
+  }, []);
+
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
