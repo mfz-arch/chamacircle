@@ -673,9 +673,17 @@ export default function Home() {
                 </div>
 
                 <button 
+                  onClick={handleContribute}
+                  disabled={activeGroup.status !== 'ACTIVE'}
+                  className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg shadow-green-600/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Pay Contribution ({activeGroup.amount} AVAX)
+                </button>
+
+                <button 
                   onClick={handleStartCycle}
                   disabled={activeGroup.status !== 'ACTIVE'}
-                  className="w-full mt-6 bg-stone-900 hover:bg-stone-800 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full mt-4 bg-stone-900 hover:bg-stone-800 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Start Cycle
                 </button>
