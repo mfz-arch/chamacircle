@@ -368,8 +368,8 @@ export default function Home() {
         // Log the recent transaction
         setRecentPayouts(prev => [{
           time: new Date().toLocaleTimeString(),
-          amount: activeGroup.amount * activeGroup.members.length,
-          type: 'Cycle Payout Executed',
+          amount: activeGroup.totalFunds || 0,
+          type: `Cycle Payout to ${nextMemberName}`,
           txHash: tx.hash
         }, ...prev]);
 
@@ -740,13 +740,22 @@ export default function Home() {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {activeGroup.members.map((m, idx) => (
-                      <div key={idx} className="flex items-center gap-3 p-3 bg-stone-50 border border-stone-100 rounded-xl">
-                        <div className="w-10 h-10 bg-stone-800 rounded-full flex items-center justify-center text-white font-bold">
-                          {m.name.charAt(0)}
+                      <div key={idx} className="flex items-center gap-3 p-3 bg-stone-50 border border-stone-100 rounded-xl justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${m.hasContributed ? 'bg-green-500' : 'bg-stone-800'}`}>
+                            {m.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-bold text-stone-900">{m.name} {idx === 0 && <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full ml-1">Admin</span>}</p>
+                            <p className="text-stone-500 text-xs font-mono">{m.walletAddress.substring(0, 6)}...{m.walletAddress.substring(m.walletAddress.length - 4)}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-stone-900">{m.name} {idx === 0 && <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full ml-1">Admin</span>}</p>
-                          <p className="text-stone-500 text-xs font-mono">{m.walletAddress.substring(0, 6)}...{m.walletAddress.substring(m.walletAddress.length - 4)}</p>
+                        <div className="text-right">
+                          {m.hasContributed ? (
+                            <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded-lg">Paid</span>
+                          ) : (
+                            <span className="text-xs font-bold bg-stone-200 text-stone-500 px-2 py-1 rounded-lg">Pending</span>
+                          )}
                         </div>
                       </div>
                     ))}
