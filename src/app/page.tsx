@@ -42,6 +42,7 @@ interface Group {
   status: 'PENDING' | 'ACTIVE';
   members: Member[];
   requests: JoinRequest[];
+  totalFunds?: number;
 }
 
 type Role = 'chairman' | 'member' | null;
