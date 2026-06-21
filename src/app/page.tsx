@@ -192,7 +192,8 @@ export default function Home() {
         
         // If blockchain timestamp is strictly greater, it means a new cycle started (payout occurred)
         if (chainStartTime > (activeGroup.lastCycleStartTime || 0) && chainStartTime > 0) {
-          const recipient = activeGroup.members[activeGroup.payoutIndex % activeGroup.members.length];
+          const currentIndex = activeGroup.payoutIndex || 0;
+          const recipient = activeGroup.members[currentIndex % activeGroup.members.length];
           
           setRecentPayouts(prev => [{
             recipientName: recipient?.name || "Member",
