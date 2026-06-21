@@ -125,7 +125,7 @@ def check_and_automate():
                 })
 
                 signed_tx = account.sign_transaction(tx)
-                tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+                tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
                 
                 print(f"🚀 Transaction Sent! Hash: {w3.to_hex(tx_hash)}")
                 print("⌛ Waiting for blockchain confirmation...")
