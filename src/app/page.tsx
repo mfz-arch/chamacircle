@@ -440,11 +440,17 @@ export default function Home() {
           const updatedMembers = [...g.members, newMember];
           // Check activation
           const newStatus = updatedMembers.length >= g.minMembers ? 'ACTIVE' : g.status;
+          let newStartTime = g.lastCycleStartTime;
+          if (newStatus === 'ACTIVE' && (!g.lastCycleStartTime || g.lastCycleStartTime === 0)) {
+            newStartTime = Math.floor(Date.now() / 1000);
+          }
+          
           return { 
             ...g, 
             members: updatedMembers, 
             requests: g.requests.filter(r => r.id !== reqId),
-            status: newStatus 
+            status: newStatus,
+            lastCycleStartTime: newStartTime
           };
         }
         return g;
