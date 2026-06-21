@@ -232,6 +232,7 @@ export default function Home() {
         id: createForm.code,
         chairmanWallet: walletAddress,
         status: 'PENDING',
+        lastCycleStartTime: Math.floor(Date.now() / 1000),
         members: [{
           name: createForm.chairmanName,
           phone: createForm.chairmanPhone,
@@ -746,6 +747,17 @@ export default function Home() {
                 </div>
                 
                 <div className="space-y-4">
+                  {activeGroup.status === 'ACTIVE' && (
+                    <div className="bg-stone-900 text-white p-4 rounded-xl border border-stone-800 shadow-inner flex flex-col items-center justify-center">
+                      <p className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-1">Time Left</p>
+                      <p className="font-black text-amber-500 text-4xl tabular-nums tracking-tight">
+                        {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:
+                        {(timeLeft % 60).toString().padStart(2, '0')}
+                      </p>
+                      <p className="text-stone-500 text-xs mt-1">Cycle Duration: {activeGroup.cycle} min</p>
+                    </div>
+                  )}
+
                   <div className="bg-stone-50 p-4 rounded-xl border border-stone-100">
                     <p className="text-stone-400 text-xs font-bold uppercase tracking-widest mb-1">Members</p>
                     <p className="font-black text-stone-900 text-2xl">{activeGroup.members.length} <span className="text-base font-medium text-stone-500">/ {activeGroup.minMembers} (Min)</span></p>
@@ -764,15 +776,17 @@ export default function Home() {
                   Pay Contribution ({activeGroup.amount} AVAX)
                 </button>
 
-                <button 
-                  onClick={handleStartCycle}
-                  disabled={activeGroup.status !== 'ACTIVE'}
-                  className="w-full mt-4 bg-stone-900 hover:bg-stone-800 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Start Cycle
-                </button>
                 {activeGroup.status !== 'ACTIVE' && (
-                  <p className="text-center text-stone-500 text-sm mt-2 font-medium">Need {activeGroup.minMembers - activeGroup.members.length} more members to start.</p>
+                  <>
+                    <button 
+                      onClick={handleStartCycle}
+                      disabled={activeGroup.members.length < activeGroup.minMembers}
+                      className="w-full mt-4 bg-stone-900 hover:bg-stone-800 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Start Cycle
+                    </button>
+                    <p className="text-center text-stone-500 text-sm mt-2 font-medium">Need {Math.max(0, activeGroup.minMembers - activeGroup.members.length)} more members to start.</p>
+                  </>
                 )}
               </div>
 
