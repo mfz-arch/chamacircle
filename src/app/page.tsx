@@ -177,6 +177,52 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [activeGroup?.lastCycleStartTime, activeGroup?.cycle]);
 
+  // Blockchain Polling for Automated Bot Payouts
+  useEffect(() => {
+    if (!activeGroup || activeGroup.status !== 'ACTIVE' || !CHAINCHAMA_ADDRESS || CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS") || typeof window === 'undefined') return;
+    
+    const pollBlockchain = async () => {
+      try {
+        const provider = new ethers.BrowserProvider((window as any).ethereum);
+        const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, provider);
+        const g = await contract.groups(activeGroup.id);
+        
+        const chainStartTime = Number(g.lastCycleStartTime);
+        const chainPayoutIndex = Number(g.payoutIndex);
+        
+        // If blockchain timestamp is strictly greater, it means a new cycle started (payout occurred)
+        if (chainStartTime > (activeGroup.lastCycleStartTime || 0)) {
+          const recipient = activeGroup.members[activeGroup.payoutIndex % activeGroup.members.length];
+          
+          setRecentPayouts(prev => [{
+            recipientName: recipient?.name || "Member",
+            recipientWallet: recipient?.walletAddress || "0x...",
+            amount: activeGroup.amount * activeGroup.members.length,
+            txHash: "0xBotAutomatedPayout...",
+            timestamp: Date.now()
+          }, ...prev]);
+          
+          setGroups(prev => prev.map(grp => {
+            if (grp.id === activeGroup.id) {
+              return {
+                ...grp,
+                lastCycleStartTime: chainStartTime,
+                payoutIndex: chainPayoutIndex,
+                totalFunds: 0,
+                members: grp.members.map(m => ({ ...m, hasContributed: false }))
+              };
+            }
+            return grp;
+          }));
+          
+        }
+      } catch(e) { }
+    };
+
+    const pollInterval = setInterval(pollBlockchain, 5000);
+    return () => clearInterval(pollInterval);
+  }, [activeGroup]);
+
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
