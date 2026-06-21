@@ -60,6 +60,8 @@ export default function Home() {
   const [activeGroupCode, setActiveGroupCode] = useState<string | null>(null);
   const [myGroups, setMyGroups] = useState<{id: string, name: string}[]>([]);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  const activeGroup = groups.find(g => g.id === activeGroupCode);
   
   // Navigation & Roles
   const [currentUserRole, setCurrentUserRole] = useState<Role>(null);
@@ -357,7 +359,6 @@ export default function Home() {
   };
 
   const handleApproveRequest = async (reqId: string, isApproved: boolean) => {
-    const activeGroup = groups.find(g => g.id === activeGroupCode);
     if (!activeGroup) return;
 
     if (isApproved) {
@@ -488,8 +489,6 @@ export default function Home() {
       showToast(e?.message || "Contribution failed", "error");
     }
   };
-
-  const activeGroup = groups.find(g => g.id === activeGroupCode);
 
   const displayMembers = activeGroup ? activeGroup.members.map((m, i) => ({
     name: m.name,
