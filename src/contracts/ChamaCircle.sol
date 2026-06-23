@@ -24,6 +24,7 @@ contract ChamaCircle {
     }
 
     mapping(string => Group) public groups;
+    string[] public allGroupCodes;
     
     // groupCode => array of approved member addresses (for round robin payouts)
     mapping(string => address[]) public groupMembersList;
@@ -39,6 +40,10 @@ contract ChamaCircle {
 
     function getUserGroups(address _user) public view returns (string[] memory) {
         return userGroups[_user];
+    }
+
+    function getAllGroups() public view returns (string[] memory) {
+        return allGroupCodes;
     }
 
     function createGroup(
@@ -80,6 +85,8 @@ contract ChamaCircle {
         groupMembersList[_code].push(msg.sender);
         // Track this group for the admin
         userGroups[msg.sender].push(_code);
+        // Track globally for the automation bot
+        allGroupCodes.push(_code);
     }
 
     function requestJoin(string memory _code, string memory _name, string memory _phone) public {

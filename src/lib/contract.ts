@@ -1,6 +1,6 @@
-export const CHAINCHAMA_ADDRESS = "0x7e95a47e10eBC0605b3ce04294a3324670C420Bd";
+export const CHAMACIRCLE_ADDRESS = "0x7e95a47e10eBC0605b3ce04294a3324670C420Bd";
 
-export const CHAINCHAMA_ABI = [
+export const CHAMACIRCLE_ABI = [
   {
     "inputs": [
       { "internalType": "string", "name": "_code", "type": "string" },

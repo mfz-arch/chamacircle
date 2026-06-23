@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Wallet, Users, ArrowRightLeft, ShieldCheck, Activity, X, Copy, CheckCircle2, Loader2, Bell, Check, XCircle } from 'lucide-react';
 import { ethers } from 'ethers';
-import { CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI } from '@/lib/contract';
+import { CHAMACIRCLE_ADDRESS, CHAMACIRCLE_ABI } from '@/lib/contract';
+import { createGroupDb, getUserGroupsDb, requestToJoinDb, getGroupDb, updateGroupDb, Group, Member, JoinRequest } from '@/lib/db';
 
 declare global {
   interface Window {
@@ -11,41 +12,7 @@ declare global {
   }
 }
 
-interface Member {
-  name: string;
-  phone: string;
-  walletAddress: string;
-  joinedAt: number;
-  hasContributed?: boolean;
-}
-
-interface JoinRequest {
-  id: string;
-  groupCode: string;
-  userWallet: string;
-  name: string;
-  phone: string;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
-  requestedAt: number;
-}
-
-interface Group {
-  id: string; // Group code
-  name: string;
-  chairmanName: string;
-  chairmanPhone: string;
-  chairmanWallet: string;
-  amount: number;
-  cycle: string;
-  minMembers: number;
-  maxMembers: number;
-  status: 'PENDING' | 'ACTIVE';
-  members: Member[];
-  requests: JoinRequest[];
-  totalFunds?: number;
-  payoutIndex?: number;
-  lastCycleStartTime?: number;
-}
+// Interfaces moved to db.ts
 
 type Role = 'chairman' | 'member' | null;
 type ViewState = 'home' | 'dashboard' | 'pending' | 'member_dashboard';
@@ -55,21 +22,16 @@ export default function Home() {
   const [isConnecting, setIsConnecting] = useState(false);
 
   // App & Global State
-  const [groups, setGroups] = useState<Group[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('chainchama_groups');
-      if (saved) {
-        try { return JSON.parse(saved); } catch(e){}
-      }
-    }
-    return [];
-  });
+  const [groups, setGroups] = useState<Group[]>([]);
 
+  // Fetch groups from Firestore on wallet connect
   useEffect(() => {
-    if (groups.length > 0) {
-      localStorage.setItem('chainchama_groups', JSON.stringify(groups));
+    if (walletAddress) {
+      getUserGroupsDb(walletAddress).then(setGroups).catch(console.error);
+    } else {
+      setGroups([]);
     }
-  }, [groups]);
+  }, [walletAddress]);
   const [recentPayouts, setRecentPayouts] = useState<any[]>([]);
   const [activeGroupCode, setActiveGroupCode] = useState<string | null>(null);
   const [myGroups, setMyGroups] = useState<{id: string, name: string}[]>([]);
@@ -132,10 +94,10 @@ export default function Home() {
 
   useEffect(() => {
     const fetchMyGroups = async () => {
-      if (walletAddress && typeof window !== 'undefined' && !CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
+      if (walletAddress && typeof window !== 'undefined' && !CHAMACIRCLE_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
         try {
           const provider = new ethers.BrowserProvider((window as any).ethereum);
-          const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, provider);
+          const contract = new ethers.Contract(CHAMACIRCLE_ADDRESS, CHAMACIRCLE_ABI, provider);
           
           const groupCodes = await contract.getUserGroups(walletAddress);
           const groupsData = [];
@@ -179,12 +141,12 @@ export default function Home() {
 
   // Blockchain Polling for Automated Bot Payouts
   useEffect(() => {
-    if (!activeGroup || activeGroup.status !== 'ACTIVE' || !CHAINCHAMA_ADDRESS || CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS") || typeof window === 'undefined') return;
+    if (!activeGroup || activeGroup.status !== 'ACTIVE' || !CHAMACIRCLE_ADDRESS || CHAMACIRCLE_ADDRESS.includes("YOUR_CONTRACT_ADDRESS") || typeof window === 'undefined') return;
     
     const pollBlockchain = async () => {
       try {
         const provider = new ethers.BrowserProvider((window as any).ethereum);
-        const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, provider);
+        const contract = new ethers.Contract(CHAMACIRCLE_ADDRESS, CHAMACIRCLE_ABI, provider);
         const g = await contract.groups(activeGroup.id);
         
         const chainStartTime = Number(g.lastCycleStartTime);
@@ -268,11 +230,11 @@ export default function Home() {
       const provider = new ethers.BrowserProvider((window as any).ethereum);
       const signer = await provider.getSigner();
       
-      if (CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
+      if (CHAMACIRCLE_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
         console.warn("Contract address not set! Bypassing blockchain transaction.");
         await new Promise(r => setTimeout(r, 1500)); // Simulate delay
       } else {
-        const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, signer);
+        const contract = new ethers.Contract(CHAMACIRCLE_ADDRESS, CHAMACIRCLE_ABI, signer);
         const amountWei = ethers.parseEther(createForm.amount);
         const tx = await contract.createGroup(
           createForm.code, 
@@ -302,9 +264,11 @@ export default function Home() {
           walletAddress: walletAddress,
           joinedAt: Date.now()
         }],
+        memberWallets: [walletAddress.toLowerCase()],
         requests: []
       };
       
+      await createGroupDb(newGroup);
       setGroups(prev => [...prev, newGroup]);
       setActiveGroupCode(newGroup.id);
       
@@ -329,10 +293,10 @@ export default function Home() {
     
     let group = groups.find(g => g.id === trimmedCode);
     
-    if (!group && !CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS") && typeof window !== 'undefined') {
+    if (!group && !CHAMACIRCLE_ADDRESS.includes("YOUR_CONTRACT_ADDRESS") && typeof window !== 'undefined') {
       try {
         const provider = new ethers.BrowserProvider((window as any).ethereum);
-        const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, provider);
+        const contract = new ethers.Contract(CHAMACIRCLE_ADDRESS, CHAMACIRCLE_ABI, provider);
         const g = await contract.groups(trimmedCode);
         
         if (g.admin !== ethers.ZeroAddress) {
@@ -379,10 +343,10 @@ export default function Home() {
     let group = groups.find(g => g.id === trimmedCode);
     
     // If not found locally, fetch from Avalanche Blockchain!
-    if (!group && !CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS") && typeof window !== 'undefined') {
+    if (!group && !CHAMACIRCLE_ADDRESS.includes("YOUR_CONTRACT_ADDRESS") && typeof window !== 'undefined') {
       try {
         const provider = new ethers.BrowserProvider((window as any).ethereum);
-        const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, provider);
+        const contract = new ethers.Contract(CHAMACIRCLE_ADDRESS, CHAMACIRCLE_ABI, provider);
         const g = await contract.groups(trimmedCode);
         
         // If the admin address is not the zero address, the group exists on-chain!
@@ -427,15 +391,14 @@ export default function Home() {
     setIsJoining(true);
     
     try {
-      if (!CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
+      if (!CHAMACIRCLE_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
         const provider = new ethers.BrowserProvider((window as any).ethereum);
         const signer = await provider.getSigner();
-        const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, signer);
+        const contract = new ethers.Contract(CHAMACIRCLE_ADDRESS, CHAMACIRCLE_ABI, signer);
         const tx = await contract.requestJoin(foundGroup.id, joinForm.name, joinForm.phone);
         await tx.wait();
       }
 
-      // Create Join Request off-chain state
       const newRequest: JoinRequest = {
         id: Math.random().toString(36).substr(2, 9),
         groupCode: foundGroup.id,
@@ -445,6 +408,8 @@ export default function Home() {
         status: 'PENDING',
         requestedAt: Date.now()
       };
+
+      await requestToJoinDb(foundGroup.id, newRequest);
 
       setGroups(prev => prev.map(g => {
         if (g.id === foundGroup.id) {
@@ -478,10 +443,10 @@ export default function Home() {
       if (!req) return;
 
       try {
-        if (!CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
+        if (!CHAMACIRCLE_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
           const provider = new ethers.BrowserProvider((window as any).ethereum);
           const signer = await provider.getSigner();
-          const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, signer);
+          const contract = new ethers.Contract(CHAMACIRCLE_ADDRESS, CHAMACIRCLE_ABI, signer);
           const tx = await contract.approveMember(activeGroup.id, req.userWallet);
           await tx.wait();
         }
@@ -498,20 +463,31 @@ export default function Home() {
         joinedAt: Date.now()
       };
 
+      const updatedMembers = [...activeGroup.members, newMember];
+      const updatedWallets = [...(activeGroup.memberWallets || []), req.userWallet.toLowerCase()];
+      const newStatus = updatedMembers.length >= activeGroup.minMembers ? 'ACTIVE' : activeGroup.status;
+      let newStartTime = activeGroup.lastCycleStartTime;
+      if (newStatus === 'ACTIVE' && (!activeGroup.lastCycleStartTime || activeGroup.lastCycleStartTime === 0)) {
+        newStartTime = Math.floor(Date.now() / 1000);
+      }
+      
+      const updatedRequests = activeGroup.requests.filter(r => r.id !== reqId);
+
+      await updateGroupDb(activeGroup.id, {
+        members: updatedMembers,
+        memberWallets: updatedWallets,
+        status: newStatus,
+        lastCycleStartTime: newStartTime,
+        requests: updatedRequests
+      });
+
       setGroups(prev => prev.map(g => {
         if (g.id === activeGroup.id) {
-          const updatedMembers = [...g.members, newMember];
-          // Check activation
-          const newStatus = updatedMembers.length >= g.minMembers ? 'ACTIVE' : g.status;
-          let newStartTime = g.lastCycleStartTime;
-          if (newStatus === 'ACTIVE' && (!g.lastCycleStartTime || g.lastCycleStartTime === 0)) {
-            newStartTime = Math.floor(Date.now() / 1000);
-          }
-          
           return { 
             ...g, 
             members: updatedMembers, 
-            requests: g.requests.filter(r => r.id !== reqId),
+            memberWallets: updatedWallets,
+            requests: updatedRequests,
             status: newStatus,
             lastCycleStartTime: newStartTime
           };
@@ -533,10 +509,10 @@ export default function Home() {
   const handleStartCycle = async () => {
     if (!activeGroup || !walletAddress) return;
     try {
-      if (!CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
+      if (!CHAMACIRCLE_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
         const provider = new ethers.BrowserProvider((window as any).ethereum);
         const signer = await provider.getSigner();
-        const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, signer);
+        const contract = new ethers.Contract(CHAMACIRCLE_ADDRESS, CHAMACIRCLE_ABI, signer);
         
         const tx = await contract.startCycle(activeGroup.id);
         await tx.wait();
@@ -575,10 +551,10 @@ export default function Home() {
   const handleContribute = async () => {
     if (!activeGroup || !walletAddress) return;
     try {
-      if (!CHAINCHAMA_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
+      if (!CHAMACIRCLE_ADDRESS.includes("YOUR_CONTRACT_ADDRESS")) {
         const provider = new ethers.BrowserProvider((window as any).ethereum);
         const signer = await provider.getSigner();
-        const contract = new ethers.Contract(CHAINCHAMA_ADDRESS, CHAINCHAMA_ABI, signer);
+        const contract = new ethers.Contract(CHAMACIRCLE_ADDRESS, CHAMACIRCLE_ABI, signer);
         const tx = await contract.contribute(activeGroup.id, {
           value: ethers.parseEther(activeGroup.amount.toString())
         });
@@ -987,7 +963,7 @@ export default function Home() {
                       <h3 className="text-xl font-black text-stone-900">Recent Activity</h3>
                     </div>
                     <a 
-                      href={`https://testnet.snowtrace.io/address/${CHAINCHAMA_ADDRESS}`}
+                      href={`https://testnet.snowtrace.io/address/${CHAMACIRCLE_ADDRESS}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs font-bold bg-stone-100 hover:bg-stone-200 text-stone-600 py-1.5 px-3 rounded-full transition-colors flex items-center gap-1"
@@ -1135,7 +1111,7 @@ export default function Home() {
                       <h3 className="text-xl font-black text-stone-900">Recent Activity</h3>
                     </div>
                     <a 
-                      href={`https://testnet.snowtrace.io/address/${CHAINCHAMA_ADDRESS}`}
+                      href={`https://testnet.snowtrace.io/address/${CHAMACIRCLE_ADDRESS}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs font-bold bg-stone-100 hover:bg-stone-200 text-stone-600 py-1.5 px-3 rounded-full transition-colors flex items-center gap-1"

@@ -43,7 +43,7 @@ python3 bot.py
 *Note: You must have a `.env` file with your `PRIVATE_KEY` and an Avalanche Fuji RPC URL.*
 
 ## 🌍 How Avalanche is Used
-Avalanche Fuji is the core backend for our application. We use it to deploy our `ChainChama.sol` smart contract, which handles the complex logic of group minimums, cycle durations, and round-robin indexing. Avalanche allows us to process these Chama payouts with incredibly low gas fees and sub-second finality, which is crucial for financial inclusion applications in Africa.
+Avalanche Fuji is the core backend for our application. We use it to deploy our `ChamaCircle.sol` smart contract, which handles the complex logic of group minimums, cycle durations, and round-robin indexing. Avalanche allows us to process these Chama payouts with incredibly low gas fees and sub-second finality, which is crucial for financial inclusion applications in Africa.
 
 ## 🔮 Future Improvements
 - Implement Stablecoin (USDC) support to protect members from crypto volatility.
