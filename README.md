@@ -1,4 +1,4 @@
-# ChainChama 🔗💸
+# ChamaCircle 🔗💸
 
 **Track 1: Financial Inclusion & Payments**
 
@@ -6,7 +6,7 @@
 Traditional savings groups (Chamas) are an essential part of the African economy, but they rely heavily on physical cash and manual trust. If a chairman mismanages funds or members fail to track contributions accurately, the entire group suffers. There is a lack of transparency, security, and automated accountability.
 
 ## 💡 The Solution
-**ChainChama** is a decentralized, transparent savings group platform built on Avalanche. Instead of trusting a human to hold the money, funds are securely locked in a Smart Contract. Once the minimum member threshold is met, members contribute AVAX, and an automated backend bot seamlessly routes the payout to the correct member in a mathematically guaranteed round-robin cycle. 
+**ChamaCircle** is a decentralized, transparent savings group platform built on Avalanche. Instead of trusting a human to hold the money, funds are securely locked in a Smart Contract. Once the minimum member threshold is met, members contribute AVAX, and an automated backend bot seamlessly routes the payout to the correct member in a mathematically guaranteed round-robin cycle. 
 
 ## ⚙️ Features
 - **Decentralized Escrow:** Smart Contracts hold all group funds, eliminating the risk of human theft.

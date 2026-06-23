@@ -643,7 +643,7 @@ export default function Home() {
               <div className="w-10 h-10 bg-amber-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-amber-600/30">
                 C
               </div>
-              <span className="text-2xl font-extrabold text-stone-900 tracking-tight">ChainChama</span>
+              <span className="text-2xl font-extrabold text-stone-900 tracking-tight">ChamaCircle</span>
             </div>
             
             {/* Global Nav Links */}
@@ -732,7 +732,7 @@ export default function Home() {
                 </span>
               </h1>
               <p className="text-xl text-stone-600 leading-relaxed max-w-lg">
-                ChainChama brings the traditional East African savings group to the blockchain. Transparent, automated, and community-driven.
+                ChamaCircle brings the traditional East African savings group to the blockchain. Transparent, automated, and community-driven.
               </p>
 
               <div className="flex flex-wrap gap-4 pt-4">

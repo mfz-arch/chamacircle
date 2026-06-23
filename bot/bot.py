@@ -69,7 +69,7 @@ wallet_address = account.address
 # Set up contract
 contract = w3.eth.contract(address=CHAINCHAMA_ADDRESS, abi=CHAINCHAMA_ABI)
 
-print("🤖 ChainChama Admin Automation Bot Started! (Python version)")
+print("🤖 ChamaCircle Admin Automation Bot Started! (Python version)")
 print(f"💼 Using Admin Wallet: {wallet_address}")
 print("👀 Monitoring all groups created by this wallet...")
 print("-" * 50)

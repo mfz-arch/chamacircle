@@ -13,7 +13,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "ChainChama | The Trustless Savings Group",
+  title: "ChamaCircle | The Trustless Savings Group",
   description: "A blockchain-powered savings group (chama/stokvel) replacing the trusted treasurer with a smart contract on Avalanche.",
 };
 
