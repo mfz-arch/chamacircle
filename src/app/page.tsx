@@ -315,7 +315,8 @@ export default function Home() {
             payoutIndex: Number(g.payoutIndex),
             lastCycleStartTime: Number(g.lastCycleStartTime),
             members: [], 
-            requests: [] 
+            requests: [],
+            memberWallets: [g.admin.toLowerCase()]
           };
           setGroups(prev => [...prev, group as Group]);
         }
@@ -366,7 +367,8 @@ export default function Home() {
             payoutIndex: Number(g.payoutIndex),
             lastCycleStartTime: Number(g.lastCycleStartTime),
             members: [],
-            requests: [] 
+            requests: [],
+            memberWallets: [g.admin.toLowerCase()]
           };
           
           // Add it to local state so the UI can use it
